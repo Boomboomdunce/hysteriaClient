@@ -21,12 +21,26 @@ jobs:
     - name: Login to Docker Hub
       uses: docker/login-action@v2
       with:
-        username: ${{ secrets.DOCKERHUB_USERNAME }}
-        password: ${{ secrets.DOCKERHUB_TOKEN }}
+        username: ${{secrets.DOCKERHUB_USERNAME}}
+        password: ${{secrets.DOCKERHUB_TOKEN}}
         
-    - name: Build and push
+    - name: Extract Metadata for Docker
+      id: meta
+      uses: docker/metadata-action@v4
+      with:
+        images: |
+          ${{github.repository}}
+          ghcr.io/${{github.repository}}
+        tags: |
+          type=ref,event=tag
+          type=edge,branch=main
+
+    - name: Build and Push Docker Images
+      id: build
       uses: docker/build-push-action@v4
       with:
         context: .
         push: true
-        tags: ${{ secrets.DOCKERHUB_USERNAME }}/hysteria2-client:latest
+        platforms: linux/amd64
+        tags: ${{steps.meta.outputs.tags}}
+        labels: ${{steps.meta.outputs.labels}}
